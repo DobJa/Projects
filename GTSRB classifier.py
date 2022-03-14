@@ -4,6 +4,8 @@ import pandas as pd
 import os
 import cv2
 from sklearn.model_selection import train_test_split
+import matplotlib as plt
+from keras.preprocessing.image import ImageDataGenerator
 
 
 DATADIR = "D:/PyCharm/GTSRB/Train"
@@ -20,13 +22,38 @@ base_model.trainable = False
 global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
 prediction_layer = tf.keras.layers.Dense(43)
 
+augment = ImageDataGenerator(
+    rotation_range = 40,
+    horizontal_flip = True,
+)
+
 model = tf.keras.Sequential([
     base_model,
     global_average_layer,
     prediction_layer
 ])
 
+model2 = tf.keras.Sequential([
+    base_model,
+    global_average_layer,
+    prediction_layer
+])
+
+model3 = tf.keras.Sequential([
+    base_model,
+    global_average_layer,
+    prediction_layer
+])
+
 model.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001),
+              loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+model2.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001),
+              loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+model3.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001),
               loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
@@ -42,11 +69,35 @@ data = np.array(data_list)
 labels = np.array(label_list)
 
 
-x_train, x_split, y_train, y_split = train_test_split(data, labels, test_size = 0.3)
-x_test, x_val, y_test, y_val = train_test_split(x_split,y_split, test_size = 0.3)
+x_train, x_split, y_train, y_split = train_test_split(data, labels, test_size = 0.2)
+x_test, x_val, y_test, y_val = train_test_split(x_split,y_split, test_size = 0.5)
 
 history = model.fit(x_train,y_train, batch_size = 64,
                     epochs = 15,
+                    shuffle=True,
                     validation_data = (x_val,y_val))
-
+print(f"\n SPLIT1 TESTING \n")
 results = model.evaluate(x_test, y_test, batch_size = 32)
+
+augment.fit(x_train)
+
+history2 = model2.fit(augment.flow(x_train, y_train ,batch_size = 64),
+                       epochs = 15,
+                        shuffle=True,
+                       validation_data = (x_val,y_val))
+print(f"\n SPLIT2 TESTING \n")
+
+results2 = model2.evaluate(x_test,y_test, batch_size = 32)
+
+x_train3 = np.concatenate((x_train, x_val))
+y_train3 = np.concatenate((y_train, y_val))
+
+
+history3 = model3.fit(augment.flow(x_train3,y_train3, batch_size= 64),
+                                epochs=15,
+                                shuffle=True,
+                                validation_data=(x_val,y_val))
+print(f"\n SPLIT3 TESTING \n")
+
+results3 = model3.evaluate(x_test,y_test, batch_size = 32)
+
