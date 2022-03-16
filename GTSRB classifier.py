@@ -20,7 +20,9 @@ base_model = tf.keras.applications.MobileNetV2(input_shape = (80,80,3),
 
 base_model.trainable = False
 global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-prediction_layer = tf.keras.layers.Dense(43)
+disc_layer1 = tf.keras.layers.Dense(1024, activation = "relu")
+disc_layer2 = tf.keras.layers.Dense(512, activation = "relu")
+prediction_layer = tf.keras.layers.Dense(43, activation = "softmax")
 
 augment = ImageDataGenerator(
     rotation_range = 40,
@@ -32,30 +34,36 @@ augment = ImageDataGenerator(
 model = tf.keras.Sequential([
     base_model,
     global_average_layer,
+    disc_layer1,
+    disc_layer2,
     prediction_layer
 ])
 
 model2 = tf.keras.Sequential([
     base_model,
     global_average_layer,
+    disc_layer1,
+    disc_layer2,
     prediction_layer
 ])
 
 model3 = tf.keras.Sequential([
     base_model,
     global_average_layer,
+    disc_layer1,
+    disc_layer2,
     prediction_layer
 ])
 
-model.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001),
+model.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.0001),
               loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model2.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001),
+model2.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.0001),
               loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model3.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001),
+model3.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.0001),
               loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
@@ -80,6 +88,7 @@ history = model.fit(x_train,y_train, batch_size = 64,
                     validation_data = (x_val,y_val))
 print(f"\n SPLIT1 TESTING \n")
 results = model.evaluate(x_test, y_test, batch_size = 32)
+model.save_weights('MODEL1/')
 
 augment.fit(x_train)
 
@@ -90,6 +99,8 @@ history2 = model2.fit(augment.flow(x_train, y_train ,batch_size = 64),
 print(f"\n SPLIT2 TESTING \n")
 
 results2 = model2.evaluate(x_test,y_test, batch_size = 32)
+
+model2.save_weights('MODEL2/')
 
 x_train3 = np.concatenate((x_train, x_val))
 y_train3 = np.concatenate((y_train, y_val))
@@ -102,4 +113,6 @@ history3 = model3.fit(augment.flow(x_train3,y_train3, batch_size= 64),
 print(f"\n SPLIT3 TESTING \n")
 
 results3 = model3.evaluate(x_test,y_test, batch_size = 32)
+
+model3.save_weights('MODEL3/')
 
