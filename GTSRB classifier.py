@@ -24,7 +24,9 @@ prediction_layer = tf.keras.layers.Dense(43)
 
 augment = ImageDataGenerator(
     rotation_range = 40,
-    horizontal_flip = True,
+    zoom_range = 0.2,
+    shear_range= 0.2,
+    vertical_flip= True
 )
 
 model = tf.keras.Sequential([
