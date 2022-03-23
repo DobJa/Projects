@@ -1,0 +1,2 @@
+Traffic sign classifier based on GTSRB dataset from kaggle (https://www.kaggle.com/datasets/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign).
+Example application of a convolutional nerual network.
